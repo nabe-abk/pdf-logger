@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="theme/docs.css">
+<link rel="stylesheet" href="js/baguetteBox.min.css">
+<script src="js/baguetteBox.min.js" defer="defer"></script>
+	<title>帳票PDFロガー　公式マニュアル</title>
+<!-- OGP -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://nabe-abk.github.io/pdf-logger/">
+<meta property="og:title" content="帳票PDFロガー　公式マニュアル">
+<meta property="og:description" content="個人・小規模事業向けのPDF帳票の管理用フリーソフト/アプリ。">
+<meta property="og:locale" content="ja_JP">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta property="og:url" content="https://nabe-abk.github.io/pdf-logger/">
+<meta name="twitter:title" content="帳票PDFロガー　公式マニュアル">
+<meta name="twitter:description" content="個人・小規模事業向けのPDF帳票の管理用フリーソフト/アプリ。">
+<meta name="twitter:site" content="@nabe_abk">
+</head>
+<body id="body" class="docs">
+
+<!--header====================================================================-->
+<h1>帳票PDFロガー　公式マニュアル</h1>
+
+<!--main body================================================================-->
+<div id="main">
+
+<!--=========================================================================-->
+<div class="baguetteBox sample-images">
+<a href="img/documents.png"><img src="img/documents.png"></a>
+<a href="img/edit.png"><img src="img/edit.png"></a>
+<a href="img/clients.png"><img src="img/clients.png"></a>
+<a href="img/edit.png"><img src="img/edit.png"></a>
+<a href="img/menu.png"><img src="img/menu.png"></a>
+</div>
+
+
+<article>
+<div class="body">
+
+<p>個人・小規模事業者向けのPDF帳票を手元で保存するためのフリーソフトです。Webアプリですが、Windowsスタンドアローンで動作させることも可能です。macOSでもローカル動作可能。</p>
+
+<ul>
+<li><a href="#誰におすすめ？">誰におすすめ？</a></li>
+<li><a href="#特徴">特徴</a></li>
+<li><a href="#download">ダウンロード</a></li>
+<li><a href="#install">インストールと実行方法</a><ul>
+	<li><a href="#install-windows">Windowsの場合</a></li>
+	<li><a href="#install-linux">Linux, macOSの場合</a></li>
+</ul></li>
+<li><a href="#install-web">Webサーバにインストールする場合</a><ul>
+	<li><a href="#install-web-補足">Webサーバ運用の補足</a></li>
+</ul></li>
+<li><a href="#conf.cgi">設定ファイル pdf-logger.conf.cgi について</a><ul>
+	<li><a href="#v.systitle">システムタイトル</a></li>
+	<li><a href="#v.start_year">開始年</a></li>
+	<li><a href="#v.allow_file_ext">アップロード可能なファイルの拡張子</a></li>
+	<li><a href="#v.dformats">書式の種類</a></li>
+</ul></li>
+<li><a href="#contact">バグ・要望・連絡先</a></li>
+</ul>
+
+
+<h2 id="誰におすすめ？">誰におすすめ？</h2>
+
+<ul>
+<li>PDFの整理・保管に困っている人。</li>
+<li><strong>クラウドサービスにデータを保管したくない人。</strong>クラウドサービスを信用してない人。</li>
+<li>帳票の整理・保管程度にお金を払いたくない人。</li>
+</ul>
+
+<h2 id="特徴">特徴</h2>
+
+<ul>
+<li>PDFや画像ファイルをブラウザから保存できる。</li>
+<li>PDFの中身を解析し、金額・日付・相手先などを自動で設定できる（要:PDF内テキストデータ）。</li>
+<li>スマホでアクセスし、カメラで領収書の写真を撮ってそのままアップロードできる。</li>
+<li>売掛・買掛の管理も可能。</li>
+<li>ファイルは「pub/YYYY/YYYY-MMDD_XXXXX_請求書_相手先会社名.(SHA256).pdf」に保存されるので、万が一システムが使えなくなってもファイルを直接検索可能。</li>
+<li>書類の種類は設定ファイルで変更可能。</li>
+<li>Windows, MacOS, Linuxサーバ等好きな環境で動作可能。</li>
+<li>バックアップはファイル丸コピーでOK。</li>
+</ul>
+
+<h2 id="download">ダウンロード</h2>
+
+<p><a href="https://github.com/nabe-abk/pdf-logger/releases">GitHub公式リポジトリ</a>からダウンロードしてください。</p>
+
+<div class="table-container">
+<table>
+<thead>
+<tr>
+	<th>ファイル</th><th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+	<td>pdf-logger-X.XX.tar.bz2</td>
+	<td>Linux, MacOS等。Windows以外の環境向け。</td>
+</tr>
+<tr>
+	<td> pdf-logger-X.XX.win-x64.zip</td>
+	<td>Windows環境向け。</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p>Gitの使い方が分かる場合は clone したほうが便利です。</p>
+<pre>
+git clone <em>--recursive</em> https://github.com/nabe-abk/pdf-logger
+</pre>
+
+
+<h2 id="install">インストールと実行方法</h2>
+
+<h3 id="install-windows">Windowsの場合</h2>
+
+<ol>
+<li>zipファイルを解凍し、そのフォルダ内の<em>pdf-logger.exe</em>を実行してください。
+<ul>
+	<li>エクスプローラーでZIPファイルを直接開いた場合は、ZIPの中の全てのファイルを必ずどこかにコピーして、そこで実行してください。</li>
+</ul></li>
+<li>自動的にブラウザが起動します。ファイヤーウォールの警告が出る場合がありますが、<em>ブラウザからのアクセスに必要なので許可してください</em>。</li>
+<li>ソフトを終了するときは、コンソール（通常「背景黒」に「白文字」が表示されている画面）を閉じてください。</li>
+</ol>
+
+<p>同梱の pdf-logger_service.exe を使用すると、サービスとして登録し、Windows起動時に自動起動させることも可能です。</p>
+
+<h3 id="install-linux">Linux, macOSの場合</h2>
+
+<ol>
+<li>Perl 5.14以降をインストールします（大抵は既に入っています）。</li>
+<li>ダウンロードしたtarファイルを展開します: <code>tar xvf pdf-logger-X.XX.tar.bz2</code><ul>
+	<li>Linuxでうまく解凍できないときはbzip2をインストールしください: <code>sudo apt install bzip2</code></li>
+</ul>
+</li>
+<li>展開したディレクトリに移動します: <code>cd pdf-logger</code></li>
+<li>pdf-logger.httpd.pl を実行します: <code>./pdf-logger.httpd.pl</code><ul>
+	<li><code>perl pdf-logger.httpd.pl</code>とする場合は、事前に pdf-logger.conf.cgi.sample から pdf-logger.sample.cgi を生成してください。</li>
+</ul>
+</li>
+<li>ブラウザで「<em>http://localhost:8888/</em>」にアクセスします（※http<em>s</em>と入力しないこと）。</li>
+</ol>
+
+<h2 id="install-web">Webサーバにインストールする場合</h2>
+
+<ol>
+<li>CGIを動かせるレンタルサーバを借りるか、Apache等のWebサーバを用意します。</li>
+<li>任意のディレクトリのファイルを展開し、そのディレクトリに移動します。</li>
+<li>ディレクトリ/ファイルパーミッションを設定します。<ul>
+	<li>__cache/, data/, pub/ は 0777 です: <code>chmod 0777 __cache/ data/ pub/</code></li>
+	<li>pdf-logger.cgi は 0755 です: <code>chmod +x pdf-logger.cgi</code></li>
+</ul></li>
+<li>pdf-logger.conf.cgi.sample を元に pdf-logger.conf.cgi を生成（コピー）します。</li>
+<li>この状態で一度ブラウザからアクセスします。</li>
+<li>問題なさそうならば、ブラウザを閉じ .htaccess.sample を .htaccess にコピーします。その後、再度ブラウザでアクセスしてください。<ul>
+	<li>サーバの設定によりマチマチなのですが、もし問題が発生したら .htaccess を削除してください。</li>
+</ul></li>
+</ol>
+
+<h3 id="install-web-補足">Webサーバ運用の補足</h2>
+
+<ul>
+<li>SuEXECの場合、0777 のパーミッション設定は不要です。</li>
+<li>FastCGIにも対応しています。必要ならば、<code>pdf-logger.fcgi</code>を使用してください。</li>
+<li>PostgreSQLやMySQLのデータベースエンジンにも対応しています。必要なモジュールをインストールした上で、<code>pdf-logger.conf.cgi</code>を適時編集してください。<ul>
+	<li>PostgreSQL on Linux/Debian系: <code>sudo apt install libdbd-pg-perl</code></li>
+	<li>MySQL(MariaDB) on Linux/Debian系: <code>sudo apt install libdbd-mysql-perl</code></li>
+</ul></li>
+<li>Nginxでも使用できます。</li>
+</ul>
+
+<p>これらについては、同様のベースシステムを使用している「<a href="https://adiary.org/v3man/">adiaryのマニュアル</a>」中の「<a href="https://adiary.org/v3man/install2/">自前サーバへのインストール</a>」以下各項目を参考にしてください。</p>
+
+
+<h2 id="conf.cgi">設定ファイル pdf-logger.conf.cgi について</h2>
+
+<p>必要なところは概ねコメントに書かれていますが、いくつか解説します。</p>
+
+<h3 id="v.systitle">システムタイトル</h3>
+<pre>
+<$v.systitle = '帳票PDFロガー'>
+</pre>
+
+<h3 id="v.start_year">開始年</h3>
+<pre>
+<$v.start_year = 2025>
+</pre>
+<p>管理を開始する「年」を西暦で指定してください。</p>
+
+<h3 id="v.allow_file_ext">アップロード可能なファイルの拡張子</h3>
+<pre>
+<$v.allow_file_ext = flagq(jpg, jpeg, png, pdf, txt)>
+</pre>
+
+<h3 id="v.dformats">書式の種類</h3>
+<pre>
+<$v.dformats = begin_hash_order>
+	請求書
+	発注書
+	見積書
+	領収書
+	納品書
+	明細書
+	その他
+<$end>
+<$v.dformat_invoice = '請求書'>
+
+<@> 税込総額表示が存在するはずの書類
+<$v.dformat_intax_list = arrayq(請求書 領収書)>
+</pre>
+
+<p>増やしても減らしても構いませんが、請求書は変更しないでください。現在のところ「請求書」のみが入出金管理の対処となりますので注意してください。<code>v.dformat_invoice</code>に複数の値を指定することはできません。</p>
+
+
+<h2 id="contact">バグ・要望・連絡先</h2>
+
+<p>バグ・要望などは「<a href="https://github.com/nabe-abk/pdf-logger/issues">GitHubのIssues</a>」か「<a href="https://x.com/nabe_abk">Twitterのリプライ</a>」で連絡いただければ幸いです。</p>
+
+<p>質問については「Twitterのリプライ」でしたら返答するかもしれません。</p>
+
+<p>このソフトを気に入った方は、適当に宣伝していただければそれが一番嬉しいです。</p>
+
+</article>
+</div>
+
+<!--footer===================================================================-->
+<footer id="footer">
+<div><a href="https://github.com/nabe-abk/pdf-logger/">pdf-logger on GitHub</a></div>
+</footer>
+
+
+<!--Scrit====================================================================-->
+<script type="module">
+	baguetteBox.run('.baguetteBox');
+</script>
+
+</body>
+</html>
