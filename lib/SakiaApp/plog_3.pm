@@ -748,6 +748,7 @@ sub save_form_file {
 	$fname = $1;
 	$fname =~ s/\./_/g;	# Apache使用時安全のために必要
 	$fname .= "$2$3";
+	$ROBJ->fs_encode(\$fname);
 
 	# ファイルの保存
 	if ($file->{tmp}) {
@@ -765,10 +766,11 @@ sub delete_document_files {
 	my $self = shift;
 	my $pkey = shift;
 	my $files= shift;
+	my $ROBJ = $self->{ROBJ};
 	my $dir  = $self->{pub_dir};
 
 	foreach(@$files) {
-		unlink("$dir$_");
+		unlink($dir . $ROBJ->fs_encode($_));
 		my $sha = $self->get_sha256_from_filename($_);
 		$self->remove_from_hash_data_file($pkey, $sha);
 	}
@@ -869,6 +871,7 @@ sub remove_from_hash_data_file {
 	#
 	# 同じファイルを参照するデータが存在しない
 	#
+	$ROBJ->fs_encode(\$file);
 	unlink($file);
 	$ROBJ->fedit_exit($fh);
 
