@@ -136,6 +136,12 @@ a:link, a:visited {
 p {
 	text-indent:		1em;
 }
+p:has(+ p) {
+	margin-bottom:		0.5em;
+}
+h3 + p, p + p {
+	margin-top:		0.5em;
+}
 p.ni {
 	text-indent:		0;
 }

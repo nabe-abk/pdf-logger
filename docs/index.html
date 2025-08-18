@@ -60,6 +60,9 @@
 	<li><a href="#v.allow_file_ext">アップロード可能なファイルの拡張子</a></li>
 	<li><a href="#v.dformats">書式の種類</a></li>
 </ul></li>
+<li><a href="#faq">困ったときは</a><ul>
+	<li><a href="#faq-login">ログインパスワードが分からない</a></li>
+</ul></li>
 <li><a href="#contact">バグ・要望・連絡先</a></li>
 </ul>
 
@@ -152,7 +155,7 @@ git clone <em>--recursive</em> https://github.com/nabe-abk/pdf-logger
 <li>CGIを動かせるレンタルサーバを借りるか、Apache等のWebサーバを用意します。</li>
 <li>任意のディレクトリのファイルを展開し、そのディレクトリに移動します。</li>
 <li>ディレクトリ/ファイルパーミッションを設定します。<ul>
-	<li>__cache/, data/, pub/ は 0777 です: <code>chmod 0777 __cache/ data/ pub/</code></li>
+	<li>__cache/, data/, pub/ は 0777 です: <code>chmod 0777 __cache data pub</code></li>
 	<li>pdf-logger.cgi は 0755 です: <code>chmod +x pdf-logger.cgi</code></li>
 </ul></li>
 <li>pdf-logger.conf.cgi.sample を元に pdf-logger.conf.cgi を生成（コピー）します。</li>
@@ -215,6 +218,17 @@ git clone <em>--recursive</em> https://github.com/nabe-abk/pdf-logger
 </pre>
 
 <p>増やしても減らしても構いませんが、請求書は変更しないでください。現在のところ「請求書」のみが入出金管理の対処となりますので注意してください。<code>v.dformat_invoice</code>に複数の値を指定することはできません。</p>
+
+
+<h2 id="faq">困ったときは</h2>
+
+<h3 id="faq-login">ログインパスワードが分からない</h3>
+
+<p>usr テーブルを削除することで（他のデータを維持したまま）全アカウントを消去し、再びアカウント登録を開始することができます。</p>
+<p>標準運用ならば<code>data/db/usr</code>ディレクトリを削除してください。</p>
+
+
+
 
 
 <h2 id="contact">バグ・要望・連絡先</h2>
