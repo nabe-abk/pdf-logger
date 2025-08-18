@@ -1,0 +1,10 @@
+#
+# 使い勝手向上のため、可能な限りこの内容の .htaccess を設置してください。
+#
+# またApacheサーバ側で mod_rewrite モジュールを有効化してください。
+#
+Options +FollowSymLinks
+
+RewriteEngine	On
+RewriteCond	%{REQUEST_FILENAME}	!-f
+RewriteRule	^(.*)$			pdf-logger.cgi/$1	[L]
