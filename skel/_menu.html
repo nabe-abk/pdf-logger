@@ -2,8 +2,7 @@
 <$v.title = "メニュー">
 <@call("_sub/menu_tree")>
 
-<#$DB.drop_table('document')>
-<#$v.db__init()>
+<$ifredirect(Auth.auto, "<@myself2>user/add")>
 
 <$ifexec(!DB.find_table('client'))><$v.db__init()><$end>
 
