@@ -122,9 +122,11 @@ article h3::before {
 	margin-left:		0px;
 }
 article h3 {
-	margin:			1em 0;
+	margin:			1em 0 1em -0.5em;
 	font-size:		100%;
 }
+
+
 
 /*--------------------------------------------------------------------
 ●基本
@@ -163,6 +165,7 @@ pre {
 	margin:			0 1em;
 	padding:		0.5em 1em;
 	border-radius:		6px;
+	overflow-x:		auto;
 }
 
 .hide {
@@ -324,6 +327,9 @@ button:has(+ .note) {
 	}
 	h1 {
 		font-size:		20pt;
+	}
+	ol, ul {
+		padding-left:		2em;
 	}
 }
 @media screen and (max-width: 460px) {
