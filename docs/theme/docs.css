@@ -331,6 +331,9 @@ button:has(+ .note) {
 	ol, ul {
 		padding-left:		2em;
 	}
+	.omit {
+		display:		none;
+	}
 }
 @media screen and (max-width: 460px) {
 	h1 {
@@ -339,6 +342,9 @@ button:has(+ .note) {
 	}
 	#main {
 		margin:			1em 0.5em;
+	}
+	.omit2 {
+		display:		none;
 	}
 }
 
