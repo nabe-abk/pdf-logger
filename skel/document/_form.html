@@ -125,6 +125,7 @@
 	<tr>
 		<th>消費税</th>
 		<td class="r">
+			<span id="tax-warning" style="display: none" class="help" data-help="総額に合う正しい税額が設定できないため、小数点以下を切り上げます。"></span>
 			<span class="tax-rate"><input type="number" class="w40 nospin" id="tax_rate" name="tax_rate" value="<@if(h.tax_rate ne '', h.tax_rate, v.default_tax_rate || 10)>" min="0" max="100">%</span>
 			<input type="text" class="w120 price" id="tax" name="tax" value="<@v.printc(h.tax || 0)>">
 		</td>
@@ -132,7 +133,6 @@
 	<tr>
 		<th>総額</th>
 		<td class="r">
-			<span id="tax-warning" style="display: none" class="help" data-help="現在の総額に合う、正しい税額が設定できません。"></span>
 			<input type="text" class="w120 price" id="total" name="total" value="<@v.printc(h.total || 0)>">
 		</td>
 	</tr>

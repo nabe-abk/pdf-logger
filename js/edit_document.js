@@ -654,16 +654,18 @@ $canvas.on('click', function() {
 		}
 	}
 	function set_vals(v) {
+		if (v.subtotal + v.tax == v.total)
+			$('#tax-warning').hide();
+		else {
+			v.subtotal = v.total - v.tax;
+			$('#tax-warning').show();
+		}
+
 		$subtotal.val( asys.printc(v.subtotal) );
 		$tax     .val( asys.printc(v.tax)    );
 		$total   .val( asys.printc(v.total)  );
 		$paid    .val( asys.printc(v.paid)   );
 		$remain  .val( asys.printc(v.remain) );
-
-		if (v.subtotal + v.tax == v.total)
-			$('#tax-warning').hide();
-		else
-			$('#tax-warning').show();
 	}
 	set_vals( get_vals() );
 
