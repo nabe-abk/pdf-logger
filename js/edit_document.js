@@ -195,17 +195,19 @@ $files.on('change', 'input.doc-file', async function(evt){
 ////////////////////////////////////////////////////////////////////////////////
 if (1) {
 	let pdfjs_path;
+	let pdfjs_query;
 	$('head script').each(function(idx, dom){
 		const $obj = $(dom);
 		const src  = $obj.attr('src');
 		if (!src) return;
-		const m = src.match(/^(.*\/)pdf.\mjs(?:\?|$)/);
+		const m = src.match(/^(.*\/)pdf.\mjs(\?\d*|$)/);
 		if (m) {
-			pdfjs_path = m[1];
+			pdfjs_path  = m[1];
+			pdfjs_query = m[2];
 		}
 	});
 	if (pdfjs_path) {
-		pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjs_path + 'pdf.worker.mjs';
+		pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjs_path + 'pdf.worker.mjs' + pdfjs_query;
 	}
 }
 
@@ -221,12 +223,17 @@ $files.on('change', 'input.doc-file', async function(evt){
 
 	} else if (file.type.match(/\/pdf$/i)) {
 		const data = await asys.asyncFileReader('readAsArrayBuffer', file);
-		const task = pdfjsLib.getDocument({ data: data });
+		const task = pdfjsLib.getDocument({
+			data: data,
+			cMapUrl: 'https://unpkg.com/pdfjs-dist@' + pdfjsLib.version + '/cmaps/',
+			cMapPacked: true
+		});
 		const pdf  = await task.promise;
-
 		for(let p=1; p<=pdf.numPages; p++) {
 			const page    = await pdf.getPage(p);
  			const content = await page.getTextContent({ includeMarkedContent: false });
+			console.log('page=', p, 'content=', content);
+
 			let ary = [];
  			for(const i of content.items) {
  				const str = i.str;
@@ -267,7 +274,7 @@ $files.on('change', 'input.doc-file', async function(evt){
 		.replace(/(\d) (円)/g, "$1$2");
 
 	// デバッグ用出力
-	if (false) {
+	if (1) {
 		const $body = asys.$body;
 		$body.find('div.debug-box').remove();
 		const $div = $('<div>').addClass('debug-box').text(text);
@@ -302,7 +309,7 @@ $files.on('change', 'input.doc-file', async function(evt){
 	for(const line_space of txtary) {
 		const line = line_space.replaceAll(' ', '');
 
-		if (1) {	// 日付判定2025年2⽉10⽇
+		if (1) {	// 日付判定: 2025年2月10日
 			const m  = line.match(/(\d\d\d\d)年(\d+)月(\d+)日/)
 				|| line.match(/(\d\d\d\d)[\-\/](\d\d)[\-\/](\d\d)/)
 			if (m && 2000<m[1] && m[2]<13 && m[3]<32) {

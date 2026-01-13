@@ -21,4 +21,4 @@ macOSでもローカル動作可能。
 
 # ライセンス
 
-*MIT License Copyright (C)2025 nabe@abk.*
+*MIT License Copyright (C)2026 nabe@abk.*
