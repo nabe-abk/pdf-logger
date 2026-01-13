@@ -173,7 +173,7 @@
 	<@foreach(local(t), list)>
 	<tr>
 		<td class="date"><a href="<@myself2><@v.skel_dir>view?pkey=<@t.pkey>"><@t.ymd></a></td>
-		<td class="" title="<@t.kana>"><a href="<@myself2>client/view?pkey=<@t.c_pkey>"><@t.name></a></td>
+		<td class="" title="<@t.kana>"><a href="<@url>&amp;c_pkey=<@t.c_pkey>"><@t.name></a><a href="<@myself2>client/view?pkey=<@t.c_pkey>">↗</a></td>
 		<td class="c nowrap spFirstLetter dtype dtype-<@t.dtype>"><@t.dtype></td>
 		<td class="c nowrap spFirstLetter dformat dformat-<@t.dformat>"><@t.dformat></td>
 		<td class="nosp dcode"><@t.dcode></td>
