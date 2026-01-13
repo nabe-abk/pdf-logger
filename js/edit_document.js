@@ -274,7 +274,7 @@ $files.on('change', 'input.doc-file', async function(evt){
 		.replace(/(\d) (円)/g, "$1$2");
 
 	// デバッグ用出力
-	if (1) {
+	if (0) {
 		const $body = asys.$body;
 		$body.find('div.debug-box').remove();
 		const $div = $('<div>').addClass('debug-box').text(text);
@@ -314,6 +314,13 @@ $files.on('change', 'input.doc-file', async function(evt){
 				|| line.match(/(\d\d\d\d)[\-\/](\d\d)[\-\/](\d\d)/)
 			if (m && 2000<m[1] && m[2]<13 && m[3]<32) {
 				const ymd = m[1] + '-' + ('0' + m[2]).substr(-2) + '-' + ('0' + m[3]).substr(-2);
+				ymd_list.push(ymd);
+			}
+		}
+		if (1) {	// 日付判定: 令和7年8月12日
+			const m  = line.match(/令和(\d+)年(\d+)月(\d+)日/);
+			if (m && m[2]<13 && m[3]<32) {
+				const ymd = (parseInt(m[1]) + 2018) + '-' + ('0' + m[2]).substr(-2) + '-' + ('0' + m[3]).substr(-2);
 				ymd_list.push(ymd);
 			}
 		}
