@@ -82,8 +82,11 @@ sub load_documents {
 		$h{max}->{$ptype} = int($max);
 	}
 
-	# 残高あり
-	if ($query->{remain}) {
+	# その他フラグ
+	if ($query->{monetary}   ne '') {	# 入出金
+		$h{boolean}->{monetary}   = int($query->{monetary});
+	}
+	if ($query->{remain}) {			# 残高あり
 		$h{min}->{remain} = 1;
 	}
 
@@ -321,12 +324,15 @@ sub check_document_data {
 	#---------------------------------------------------
 	# 決済情報
 	#---------------------------------------------------
-	$data->{paid_ymd} = $form->{paid_ymd};
-	$data->{paid}     = $form->{paid};
+	my $monetary = $form->{monetary};
 
-	if ($dformat eq $self->{dformat_invoice}) {
+	if ($monetary) {
+		$data->{monetary} = 1;
+		$data->{paid_ymd} = $form->{paid_ymd};
+		$data->{paid}     = $form->{paid};
 		$self->check_paid_data('paid_ymd', 'paid', $data);
 	} else {
+		$data->{monetary} = 0;
 		$data->{paid_ymd} = undef;
 		$data->{paid}     = undef;
 		$data->{remain}   = undef;
@@ -533,18 +539,28 @@ sub _ajax_save_pay {
 	foreach(0..$#$pkeys) {
 		my $pkey = $pkeys->[$_];
 		my $date = $dates->[$_];
-		my $paid = $pays->[$_];
+		my $paid = int($pays->[$_] =~ s/[^-\d]//gr);
 		my $h    = $self->load_document($pkey);
 		if (!$h) {
 			$ROBJ->form_err("pkey_ary#$_", "対象の書類が見つかりません: %d", $pkey);
 			next;
 		}
-		if ($h->{dformat} ne $self->{dformat_invoice}) {
-			$ROBJ->form_err("pkey_ary#$_", "対象の形式が「%s」ではありません: %s", $self->{dformat_invoice}, $h->{dformat});
+		if (!$h->{monetary}) {
+			$ROBJ->form_err("pkey_ary#$_", "対象の書類が「入出金あり」に設定されていません: %s %s", $h->{ymd}, $self->load_client_name($h->{c_pkey}));
 			next;
 		}
+
+		if ($date ne '' && $paid == 0) {
+			$ROBJ->form_err("paid_ary#$_", "日付のみ設定されています: %s %s", $h->{ymd}, $self->load_client_name($h->{c_pkey}));
+			next;
+		}
+		if ($date eq '' && $paid != 0) {
+			$ROBJ->form_err("date_ary#$_", "金額のみ設定されています: %s %s", $h->{ymd}, $self->load_client_name($h->{c_pkey}));
+			next;
+		}
+
 		if ($date ne '' || $paid ne '') {
-			my $data = $self->check_paid_data("date_ary#$_", "pkey_ary#$_", {
+			my $data = $self->check_paid_data("date_ary#$_", "paid_ary#$_", {
 				total	=> $h->{total},
 				paid_ymd=> $date,
 				paid	=> $paid
@@ -552,6 +568,7 @@ sub _ajax_save_pay {
 			if (!$data) { next; }
 			$date = $data->{paid_ymd};
 			$paid = $data->{paid};
+
 		}
 		if ($paid eq $h->{paid} && $date eq $h->{paid_ymd}) {
 			next;	# skip

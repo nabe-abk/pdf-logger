@@ -285,6 +285,9 @@ table.list {
 th {
 	font-size:		var(--sub-font-size);
 }
+th.small {
+	padding:		1px;
+}
 
 td.date {
 	font-size:		90%;
@@ -335,6 +338,12 @@ th {
 }
 td {
 	background-color:	#e8f1ff;
+}
+tr.doc-line:not(.monetary) td {
+	background-color:	#e1e8f1;
+}
+td.non-zero-remain {
+	color:			#d00;
 }
 
 /*--------------------------------------------------------------------
@@ -431,9 +440,9 @@ textarea, select {
 
 input[readonly] {
 	color:			#000;
-	background-color:	#eef;
+	background-color:	#f1f1ff;
 	cursor:			default;
-	border-width:		1px;
+	border-style:		solid;
 	border-color:		#ccc;
 }
 input[disabled] {
@@ -602,7 +611,7 @@ img.camera-thumbnail {
 /*--------------------------------------------------------------------
 ●エラー表示
 --------------------------------------------------------------------*/
-.error {
+.error, input.warning {
 	background-color:	#fee;
 }
 
@@ -611,6 +620,7 @@ span.warning, span.error,
 p.warning, p.error, strong {
 	color:		#d30;
 }
+
 em {
 	font-style:	normal;
 	font-weight:	bold;
@@ -787,7 +797,7 @@ span.fail {
 /*--------------------------------------------------------------------
 ●サイズ指定
 --------------------------------------------------------------------*/
-.small { font-size: 90%; }
+.small { font-size: var(--small-font-size); }
 
 .w20 { width: 20px; }
 .w30 { width: 30px; }

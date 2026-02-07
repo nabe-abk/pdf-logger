@@ -674,6 +674,10 @@ $canvas.on('click', function() {
 			v.subtotal = v.total - v.tax;
 			$('#tax-warning').show();
 		}
+		if ($('#pay_on_day').prop('checked')) {	// 当日決済フラグがon
+			v.paid   = v.total;
+			v.remain = 0;
+		}
 
 		$subtotal.val( asys.printc(v.subtotal) );
 		$tax     .val( asys.printc(v.tax)    );

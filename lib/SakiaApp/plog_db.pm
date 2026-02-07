@@ -78,6 +78,9 @@ INFO
 		tax_rate	int NOT NULL			# 税率(%単位)
 		tax		int NOT NULL			# 税額
 		total		int NOT NULL			# 総額
+
+		monetary	boolean NOT NULL default 'f'	# 金銭の授受を含む
+		pay_on_day	boolean NOT NULL default 'f'	# 当日決済
 		paid_ymd	DATE				# 決済日（YYYYMMDD）
 		paid		int				# 決済額
 		remain		int				# 残高（未決済額）

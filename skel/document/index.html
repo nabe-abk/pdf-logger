@@ -63,6 +63,9 @@
 			<input type="text" class="price w80 js-on-change-submit" name="max_price" value="<@if(max ne '', v.printc(max))>">
 		</span>
 		<span class="iblock">
+			<label><input type="checkbox" class="js-on-change-submit" name="monetary" value="1"<@if(Query.monetary, ' checked')>>入出金あり</label>
+		</span>
+		<span class="iblock">
 			<label><input type="checkbox" class="js-on-change-submit" name="remain" value="1"<@if(Query.remain, ' checked')>>残高あり</label>
 		</span>
 		</div>
@@ -106,6 +109,8 @@
 			<option value="-create_tm"<@	if(x eq '-create_tm',	' selected')>>登録日▼</option>
 			<option value="update_tm"<@	if(x eq 'update_tm',	' selected')>>更新日▲</option>
 			<option value="-update_tm"<@	if(x eq '-update_tm',	' selected')>>更新日▼</option>
+			<option value="monetary"<@	if(x eq 'monetary',	' selected')>>入出金▲</option>
+			<option value="-monetary"<@	if(x eq '-monetary',	' selected')>>入出金▼</option>
 		</select></span>
 
 		<span class="iblock">
@@ -150,7 +155,7 @@
 	<div class="table-container">
 	<table class="list slim js-sortable-value"><thead><$x=Query.sort>
 	<tr>
-		<th class=""><a href="<@url>&amp;sort=<@if(x eq 'ymd', '-')>ymd">日付</th>
+		<th class=""><a href="<@url>&amp;sort=<@if(x eq 'ymd', '-')>ymd">日付</a></th>
 		<th class=""><a href="<@url>&amp;sort=<@if(x eq 'kana', '-')>kana">相手</a></th>
 		<th class="">種別</th>
 		<th class="">書式</th>
@@ -160,6 +165,8 @@
 		<th class="nosp tax-rate">税率</th>
 		<th class="nosp price"><a href="<@url>&amp;sort=<@if(x eq 'tax', '-')>tax">税額</a></th>
 		<th class="price"><a href="<@url>&amp;sort=<@if(x eq 'total', '-')>total">総額</a></th>
+
+		<th class="nosp small" title="入出金/金銭授受あり"><a href="<@url>&amp;sort=<@if(x eq 'monetary', '-')>monetary">入出金</a></th>
 
 		<th class="nosp pay date"><a href="<@url>&amp;sort=<@if(x eq 'paid_ymd', '-')>paid_ymd">決済日</th>
 		<th class="nosp pay price"><a href="<@url>&amp;sort=<@if(x eq 'remain', '-')>remain">残高</th>
@@ -171,7 +178,7 @@
 	</thead>
 	<tbody>
 	<@foreach(local(t), list)>
-	<tr>
+	<tr class="doc-line <@if(t.monetary, 'monetary')>">
 		<td class="date"><a href="<@myself2><@v.skel_dir>view?pkey=<@t.pkey>"><@t.ymd></a></td>
 		<td class="" title="<@t.kana>"><a href="<@url>&amp;c_pkey=<@t.c_pkey>"><@t.name></a><a href="<@myself2>client/view?pkey=<@t.c_pkey>">↗</a></td>
 		<td class="c nowrap spFirstLetter dtype dtype-<@t.dtype>"><@t.dtype></td>
@@ -182,14 +189,16 @@
 		<td class="nosp price" data-sort="<@t.subtotal>"><@v.printc(t.subtotal)></td>
 		<td class="nosp tax-rate" data-sort="<@t.tax_rate>"><@t.tax_rate>%</td>
 		<td class="nosp price" data-sort="<@t.tax>"><@v.printc(t.tax)></td>
-		<td class="price" data-sort="<@t.total>"><@v.printc(t.total)></td>
+		<td class="price total-price" data-sort="<@t.total>"><@v.printc(t.total)></td>
 
-	<@ifexec(t.dformat eq v.dformat_invoice)>
+		<td class="nosp check"><@if(t.monetary,   '✔')></td>
+
+	<@ifexec(t.monetary)>
 		<td class="nosp pay date"><@t.paid_ymd></td>
-		<td class="nosp pay price" data-sort="<@t.remain>"><@v.printc(t.remain)></td>
+		<td class="nosp pay price remain<@if(t.remain, ' non-zero-remain')>" data-sort="<@t.remain>"><@v.printc(t.remain)></td>
 	<$else>
-		<td class="nosp pay c">-</td>
-		<td class="nosp pay c" data-sort="0">-</td>
+		<td class="nosp pay"></td>
+		<td class="nosp pay"></td>
 	<$end>
 
 		<td class="nosp date create_tm" title="<@t.create_tm>"><@v.parse_datetm(t.create_tm)></td>
@@ -211,7 +220,7 @@
 		<td class="num"><@v.printc(sum.tax)></td>
 		<td class="num"><@v.printc(sum.total)></td>
 
-		<td class="pay"></td>
+		<td colspan="2"></td>
 		<td class="pay num" id="view-total-remain"><@v.printc(sum.remain)></td>
 
 		<td class="create_tm noborder"></td>

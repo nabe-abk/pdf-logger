@@ -16,8 +16,9 @@
 	asys.set_cookie('document_backurl', '<@url>');
 </script>
 
-<$Query.dtype ||= ow.dtype>
-<$Query.dformat = v.dformat_invoice>
+<$Query.dtype  ||= ow.dtype>
+<$Query.monetary   = 1>
+<$Query.pay_on_day = 0>
 
 <!--=========================================================================-->
 <@call("_sub/menu_tree")>
@@ -79,8 +80,11 @@
 		</select></span>
 
 		<span class="iblock"><$x = Query.dformat>
-		<select name="dformat">
-			<option class="dformat-<@x>" value="<@x>" selected><@x></option>
+		<select name="dformat" class="js-on-change-submit">
+			<option value="">書式</option>
+		<@foreach_keys(local(t), v.dformats)>
+			<option class="dformat-<@t>" value="<@t>"<@if(t eq x, ' selected')>><@t></option>
+		<$end>
 		</select></span>
 
 		<span class="iblock">
@@ -152,7 +156,7 @@
 	</thead>
 	<tbody id="pay-lines">
 	<@foreach(local(t), list)>
-	<tr data-total="<@t.total>">
+	<tr data-ymd="<@t.ymd>" data-total="<@t.total>">
 		<td class="date">
 			<a href="<@myself2><@v.skel_dir>view?pkey=<@t.pkey>"><@t.ymd></a>
 			<input type="hidden" name="pkey_ary" value="<@t.pkey>">
@@ -165,8 +169,11 @@
 		<td class="price" data-sort="<@t.total>"><@v.printc(t.total)></td>
 
 		<td class="nowrap pay" data-sort="<@t.paid>">
+			<span class="pay-on-day nosp">
+				<label><input class="pay_on_day" type="checkbox" name="pay_on_day"<@if(t.ymd eq t.paid_ymd && t.total==t.paid, ' checked')>>当日</label>
+			</span>
 			<span class="pay-date">
-				<input type="date" name="date_ary" max="9999-12-31" value="<@t.paid_ymd>">
+				<input class="line-paid_ymd" type="date" name="date_ary" max="9999-12-31" value="<@t.paid_ymd>">
 			</span>
 			<span class="pay-price">
 				<button type="button" class="spFirstLetter pay-all">全額</button>	<@\>

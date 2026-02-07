@@ -46,20 +46,16 @@
 			<$end>
 			</select>
 		<script type="module">
-			const $pay_inp = $('#tbody-pay input, #tbody-pay select, #tbody-pay button');
-			const $paid    = $('#paid');
-			const $remain  = $('#remain');
+			const $monetary       = $('#monetary');
+			const $pay_on_day     = $('#pay_on_day');
+			const dfmt_monetary   = {<@foreach(local(d), v.dformat_monetary  )>'<@d>': true,<$end>};
+			const dfmt_pay_on_day = {<@foreach(local(d), v.dformat_pay_on_day)>'<@d>': true,<$end>};
 
 			$('#dformat').on('change', function(){
-				const $sel = $(this);
-				if ($sel.val() == '<@v.dformat_invoice>') {
-					$pay_inp.prop('disabled', false);
-				} else {
-					$pay_inp.prop('disabled', true);
-					$paid.val(0);
-					$remain.val( $('#total').val() );
-				}
-			}).change();
+				const v = $(this).val();
+				$monetary  .prop('checked', dfmt_monetary  [v] || false).change();
+				$pay_on_day.prop('checked', dfmt_pay_on_day[v] || false).change();
+			});
 		</script>
 		</td>
 	</tr>
@@ -138,19 +134,64 @@
 	</tr>
 	</tbody>
 
-	<tbody id="tbody-pay">
+	<tbody>
 	<tr>
 		<th colspan="2">決済</th>
 	</tr>
 	<tr>
+		<th>設定</th>
+		<td class="c">
+			<label><input type="checkbox" name="monetary"   id="monetary"   value="1"<@if(h.monetary, ' checked')>>入出金あり</label>
+			<label><input type="checkbox" name="pay_on_day" id="pay_on_day" value="1"<@if(h.ymd && h.ymd eq h.paid_ymd && h.total==h.paid, ' checked')>>当日決済</label>
+		<script type="module">
+			const $inputs     = $('.tr-pay input');
+			const $pay_on_day = $('#pay_on_day');
+
+			$('#monetary').on('change', function(){
+				const v = $(this).prop('checked');
+				$inputs    .prop('disabled', !v);
+				$pay_on_day.prop('disabled', !v).change();
+			});
+			$pay_on_day.on('change', function(){
+				const $obj = $(this);
+				if ($obj.prop('disabled')) return;
+
+				if ($obj.prop('checked')) {
+					$inputs.prop('readonly', true);
+					$('#paid_ymd').val( $('#ymd').val()   );
+					$('#paid')    .val( $('#total').val() );
+					$('#remain')  .val( 0 );
+				} else {
+					$inputs.prop('readonly', false);
+				}
+			});
+
+			$('#ymd').on('change', function(){
+				if ($pay_on_day.prop('disabled')) return;
+				if ($pay_on_day.prop('checked'))
+					$('#paid_ymd').val( $(this).val() );
+			});
+			$('#total').on('change', function(){
+				if ($pay_on_day.prop('disabled')) return;
+				if ($pay_on_day.prop('checked')) {
+					$('#paid')    .val( $(this).val() );
+					$('#remain')  .val( 0 );
+				}
+			});
+			// init
+			$('#monetary').change();
+		</script>
+		</td>
+	</tr>
+	<tr class="tr-pay">
 		<th>決済額</th>
 		<td class="r">
-			<input name="paid_ymd" type="date"  max="9999-12-31" value="<@h.paid_ymd || v.get_today()>">
+			<input type="date" id="paid_ymd" name="paid_ymd" max="9999-12-31" value="<@h.paid_ymd || v.get_today()>">
 			<button type="button" id="pay-all">全額</button>	<@\>
 			<input type="text" class="w120 price" id="paid" name="paid" value="<@v.printc(h.paid || 0)>">
 		</td>
 	</tr>
-	<tr>
+	<tr class="tr-pay">
 		<th>残高</th>
 		<td class="r">
 			<input type="text" class="w120 price" id="remain" name="remain" value="<@v.printc(h.total - h.paid)>" readonly>

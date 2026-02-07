@@ -10,6 +10,18 @@ const $total_pay    = $('#view-total-paid');
 const $total_remain = $('#view-total-remain');
 
 //------------------------------------------------------------------------------
+// 当日決済ボタン
+//------------------------------------------------------------------------------
+$lines.on('change', 'input', evt => {
+	const $obj = $(evt.target);
+	if (! $obj.prop('checked')) return;
+
+	const $tr = $obj.closest('tr');
+	$tr.find('input.line-paid_ymd').val( $tr.data('ymd')   );
+	$tr.find('input.line-paid')    .val( $tr.data('total') ).change();
+});
+
+//------------------------------------------------------------------------------
 // 全額ボタン
 //------------------------------------------------------------------------------
 $lines.on('click', 'button.pay-all', evt => {
@@ -31,7 +43,24 @@ function recalc_total() {
 		const $remain = $tr.find('td.line-remain');
 		const paid    = asys.get_price($paid.val());
 		const remain  = $tr.data('total') - paid;
-		$remain.text(asys.printc(remain));	
+		$remain.text(asys.printc(remain));
+
+		const $pymd = $tr.find('input.line-paid_ymd');
+		const pymd  = $pymd.val();
+		const ymd   = $tr.data('ymd');
+		$tr.find('input.pay_on_day').prop('checked', ymd===pymd && remain===0);
+
+		if (pymd != '' && paid===0) {
+			$pymd.removeClass('warning');
+			$paid.addClass('warning');
+		} else if (pymd==='' && paid!==0) {
+			$pymd.addClass('warning');
+			$paid.removeClass('warning');
+		} else {
+			$pymd.removeClass('warning');
+			$paid.removeClass('warning');
+		}
+
 
 		total_paid   += paid;
 		total_remain += remain;
@@ -40,7 +69,7 @@ function recalc_total() {
 	$total_remain.text(asys.printc(total_remain));
 }
 
-$lines.on('change keyup', 'input.line-paid', recalc_total);
+$lines.on('change keyup', 'input.line-paid, input.line-paid_ymd', recalc_total);
 
 // init
 recalc_total()

@@ -103,7 +103,12 @@
 	明細書
 	その他
 <$end>
-<$v.dformat_invoice = '請求書'>
+
+金銭授受が発生する書類
+<$v.dformat_monetary = arrayq(請求書 領収書 納品書 明細書)>
+
+上の中で当日支払を基本とする書類
+<$v.dformat_pay_on_day = arrayq(領収書)>
 
 税込総額表示が存在するはずの書類
 <$v.dformat_intax_list = arrayq(請求書 領収書)>
