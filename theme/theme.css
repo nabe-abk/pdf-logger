@@ -205,7 +205,6 @@ article div.body {
 }
 .view-right {
 	flex-grow:	1;
-	max-height:	800px;
 }
 @media screen and (max-width: 880px) {
 	.view-left {
@@ -229,6 +228,9 @@ article div.body {
 #view-file:has(*) {
 	border:		2px solid #00c;
 	max-width:	100%;
+	overflow:	hidden;
+	resize:		vertical;
+	min-height:	200px;
 }
 #view-file object {
 	width:		100%;
@@ -250,7 +252,7 @@ article div.body {
 #view-file img {
 	display:	block;
 	width:		100%;
-	max-height:	200%;
+	max-height:	80dvh;
 	margin:		0;
 	object-fit:	contain;
 }
