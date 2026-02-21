@@ -2,10 +2,10 @@
 use strict;
 unshift(@INC, './lib');
 #-------------------------------------------------------------------------------
-# Sakia Startup routine (for CGI)
+# Sakia system - startup routine (for CGI)
 #					Copyright (C)2005-2023 nabe@abk
 #-------------------------------------------------------------------------------
-# Last Update : 2023/02/21
+# Last Update : 2023-02-21
 #
 BEGIN {
 	if ($] < 5.014) {
