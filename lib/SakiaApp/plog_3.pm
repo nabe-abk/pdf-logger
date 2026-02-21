@@ -222,7 +222,7 @@ sub _ajax_edit_document {
 	#-------------------------------------------------------------
 	my $dir = $self->{pub_dir};
 	foreach(keys(%$ren_files)) {
-		rename("$dir$_", $dir . $ren_files->{$_});
+		$ROBJ->move_file("$dir$_", $dir . $ren_files->{$_});
 	}
 	$self->delete_document_files($pkey, $del_files);
 
