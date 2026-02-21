@@ -36,15 +36,15 @@ $files.on('change', 'input.doc-file', async function(){
 	const $obj = $(this);
 	if (!$obj.val()) return;
 
-	$obj.closest('tr').find('img.camera-thumbnail').remove();
+	$obj.closest('tr').find('img.camera-thumbnail').removeAttr('src');
 });
 
 // 最後の行のファイルが選択されたら、新しい行を追加する
-$files.on('change', 'tr.last-upload input.doc-file, tr.last-upload img.camera-thumbnail', function(evt){
-	const $obj = $(evt.target);
-	if ($obj.is('input.doc-file') && !$obj.val()) return;
+$files.on('update-file-event take-photo-event', 'tr.last-upload img', function(evt){
+	const $img = $(this);
+	if (! $img.data('file')) return;
 
-	const $tr = $obj.closest('tr');
+	const $tr = $img.closest('tr');
 	$tr.find('span.camera-info').remove();
 
 	$tr.find('button.reset-file').show();
@@ -63,9 +63,10 @@ $files.on('click', 'tr:not(.last-upload) button.reset-file', function(evt){
 //●選択されたファイル名をプレビュー表示
 ////////////////////////////////////////////////////////////////////////////////
 const $view_file = $('#view-file');
-let $td_current_view;
+let $current_view_td;
 
-function view_form_file(file) {
+function view_form_file(file, $td) {
+	$current_view_td = $td;
 	asys.view_file($view_file, {
 		readAsDataURL: function(){
 			return asys.asyncFileReader('readAsDataURL', file);
@@ -77,22 +78,18 @@ function view_form_file(file) {
 	});
 }
 
-function view_camera_img(data) {
-	asys.view_file($view_file, {
-		readAsDataURL: () => data,
-		type: 'image/jpeg'
-	});
-}
-
-$files.on('change', 'input.doc-file', async function(){
-	const $td = $(this).closest('td')
+$files.on('change', 'input.doc-file', async function(evt) {
+	const $inp = $(this);
+	const $td  = $inp.closest('td')
 	const file = this.files[0];
 	if (!file) return;
-	//if ($td.is($td_current_view)) return;
 
-	view_form_file(file);
-	$td_current_view = $td;
-	$td.find('img.camera-thumbnail').remove();
+	const $img = $td.find('img.camera-thumbnail');
+	$img.removeAttr('src');
+	$img.data('file', file);
+	$img.trigger('update-file-event');
+
+	view_form_file(file, $td);
 });
 
 $files.on('click', 'td.file', async function(evt){
@@ -100,21 +97,12 @@ $files.on('click', 'td.file', async function(evt){
 	if (tag=='BUTTON' || tag=='A') return;
 
 	const $td = $(this);
-	if ($td.is($td_current_view)) return;
+	if ($td.is($current_view_td)) return;
 
 	const $img = $td.find('img.camera-thumbnail');
 	if ($img.length) {
-		view_camera_img($img.attr('src'));
-		$td_current_view = $td;
-		return;
-	}
-
-	const $file = $td.find('input.doc-file');
-	if ($file.length) {
-		const files = $file[0].files;
-		if (!files.length) return;
-		view_form_file(files[0]);
-		$td_current_view = $td;
+		const file = $img.data('file');
+		if (file) view_form_file(file, $td);
 		return;
 	}
 
@@ -132,7 +120,7 @@ $files.on('click', 'td.file', async function(evt){
 		},
 		type: res.headers.get("Content-Type")
 	});
-	$td_current_view = $td;
+	$current_view_td = $td;
 });
 
 // 最初のファイルを自動表示
@@ -144,7 +132,7 @@ if (1) {
 // 表示中のファイルをリセットしたら表示クリア
 $files.on('click', 'tr:not(.last-upload) button.reset-file', function(){
 	const $td = $(this).closest('td');
-	if ($td.is($td_current_view)) $view_file.empty();
+	if ($td.is($current_view_td)) $view_file.empty();
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,8 +149,8 @@ if (1) {
 	});
 }
 
-$files.on('change', 'input.doc-file', async function(evt){
-	const file = evt.target.files[0];
+$files.on('update-file-event', 'img', async function(evt) {
+	const file = $(this).data('file');
 	if (!file) return;
 	if (!$('#auto-set-by-filename').prop('checked')) return;
 
@@ -211,8 +199,8 @@ if (1) {
 	}
 }
 
-$files.on('change', 'input.doc-file', async function(evt){
-	const file = evt.target.files[0];
+$files.on('update-file-event', 'img', async function(evt) {
+	const file = $(this).data('file');
 	if (!file) return;
 	if (!$('#auto-set-by-content').prop('checked')) return;
 
@@ -458,8 +446,8 @@ $files.on('change', 'input.doc-file', async function(evt){
 //------------------------------------------------------------------------------
 //●選択されたファイルのハッシュ値を計算し、重複を確認する。
 //------------------------------------------------------------------------------
-$files.on('change', 'input.doc-file', async function(evt){
-	const file = evt.target.files[0];
+$files.on('update-file-event', 'img', async function(evt) {
+	const file = $(this).data('file');
 	if (!file) return;
 
 	const data = await asys.asyncFileReader('readAsArrayBuffer', file);
@@ -475,7 +463,7 @@ $files.on('change', 'input.doc-file', async function(evt){
 	}
 	const b64 = b64urlsafe(_b64);
 
-	const $td  = $(evt.target).closest('td');
+	const $td = $(evt.target).closest('td');
 	$td.find('.doc-filename').attr('title', b64);
 
 	const ret = await asys.send_ajax({
@@ -523,11 +511,13 @@ $mainForm.data('generator', function($form){
 
 	const $imgs = $files.find('img.camera-thumbnail');
 	for(const img of $imgs) {
-		const $img = $(img);
-		const blob = $img.data('blob');
-		if (!blob) continue;
+		// 重複送信防止
+		const $inp = $(img).closest('td').find('input.doc-file');
+		if ($inp[0].files.length) continue;
 
-		fd.append('images_ary', blob, 'camera_iamge.jpg');
+		const file = $(img).data('file');
+		if (!file) continue;
+		fd.append('images_ary', file);
 	}
 
 	return fd;
@@ -639,11 +629,65 @@ $canvas.on('click', function() {
 	$img.show();
 	$img.change();
 
-	$canvas[0].toBlob( blog => { $img.data('blob', blog); }, 'image/jpeg', 0.9 );
-
-	view_camera_img(dataUrl);
+	$canvas[0].toBlob( blob => {
+		const file = new File([blob], 'camera-image.jpg', { type: 'image/jpeg' });
+		$img.data('file', file);
+		$img.trigger('take-photo-event');
+		view_form_file(file);
+	}, 'image/jpeg', 0.9);
 
 	camera.resume();
+});
+
+//##############################################################################
+//■ファイル ドラッグ&ドロップ
+//##############################################################################
+//
+// object領域にイベントを取得されないため、見えない overlay を重ねる。
+//
+let $overlay = $('<div>').addClass('ui-overlay').css('z-index', 1000000).hide();
+$('#body').append($overlay);
+
+$overlay.on('dragleave', evt => $overlay.hide());
+$(window)
+.on('dragenter', evt => $overlay.show() )
+.on('dragover',  evt => false )	// これがないと drop を拾えない
+.on("drop", function(evt) {
+	$overlay.hide();
+	evt.stopPropagation();
+	evt.preventDefault();
+	const data = evt.originalEvent.dataTransfer;
+	if (!data) return;
+
+	const files = data.files;
+	if (!files || !files.length) return;
+
+	let first = true;
+	const err_files = [];
+	for(const file of files) {
+		const $tr = $files.find('tr.last-upload');
+		const ary = ($tr.find('input.doc-file').attr('accept') || '').toLowerCase().split(/\s*,\s*/);
+		const ma  = file.name.match(/\.[^\.]+$/);
+		if (!ma || !ary.includes( ma[0].toLowerCase() )) {
+			err_files.push( asys.tag_esc_amp(file.name) );
+			continue;
+		}
+		const $img  = $tr.find('img.camera-thumbnail');
+		const $span = $tr.find('span.doc-filename');
+		$span.text( file.name );
+		$img.data('file', file);
+		$img.trigger('update-file-event');
+
+		if (first) {
+			$tr.find('td').click();		// view first file
+			first = false;
+		}
+	}
+	if (err_files.length) {
+		asys.show_error("このファイルはアップロードできません。\n<ul>"
+			+ err_files.join("</li>\n<li>")
+			+ '</ul>')
+	}
 });
 
 //##############################################################################

@@ -235,9 +235,8 @@
 	<tbody>
 	<tr id="upload-templates" class="hide">
 		<td colspan="2" class="file">
-			<img class="camera-thumbnail hide">
 			<input class="hide doc-file" id="doc_file" type="file" name="files_ary" accept=".<@join(',.', keys(v.allow_file_ext))>" value="" data-default="" data-target="#doc-file-filename">
-			<span class="doc-filename" id="doc-file-filename"></span>
+			<img class="camera-thumbnail hide"><span class="doc-filename" id="doc-file-filename"></span>	<@> ←改行等で間に空白を入れないこと
 			<button type="button" class="doc-file js-file-btn"     data-target="#doc_file">選択</button>
 			<button type="button" class="doc-file reset-file hide" data-target="#doc_file">クリア</button>
 			<span class="camera-info">

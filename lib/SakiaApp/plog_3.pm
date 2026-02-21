@@ -365,42 +365,44 @@ sub check_document_data {
 	my @files;
 	my @new_files;
 	my %rename_files;
-	foreach(@$ary) {
-		if (@$imgs && ref($_) && $_->{'name'} eq '') { $_ = shift(@$imgs); }
-		if (!ref($_)) {
-			if (!$saved{$_}) {
+	foreach(0..$#$ary) {
+		my $file = $ary->[$_];
+
+		if (@$imgs && ref($file) && $file->{'name'} eq '') { $file = shift(@$imgs); }
+		if (!ref($file)) {
+			if (!$saved{$file}) {
 				$ROBJ->form_err("files_ary#$_", '既存ファイルが消えています。編集画面をリロードしてください。');
 				next;
 			}
-			delete $saved{$_};
+			delete $saved{$file};
 
-			my $sha  = $self->get_sha256_from_filename($_);
-			my $name = $self->format_filename($pkey, $data, $_, $sha);
-			if ($name ne $_) {
-				$rename_files{$_} = $name;
+			my $sha  = $self->get_sha256_from_filename($file);
+			my $name = $self->format_filename($pkey, $data, $file, $sha);
+			if ($name ne $file) {
+				$rename_files{$file} = $name;
 			}
-			$shalist{$sha} = 1;
+			$shalist{$sha} = $_;
 			push(@files, $name);
 			next;
 		}
 		#
 		# form files
 		#
-		if ($_->{name} eq '') { next; }
-		if (!$_->{size}) {
-			$ROBJ->form_err("files_ary#$_", 'ファイルサイズが 0 です: %s', $_->{name});
+		if ($file->{name} eq '') { next; }
+		if (!$file->{size}) {
+			$ROBJ->form_err("files_ary#$_", 'ファイルサイズが 0 です: %s', $file->{name});
 			next;
 		}
 
-		my $sha  = $self->get_sha256_b64url($_);
-		my $name = $self->format_filename($pkey, $data, $_->{name}, $sha);
+		my $sha  = $self->get_sha256_b64url($file);
+		my $name = $self->format_filename($pkey, $data, $file->{name}, $sha);
 		if (!$name) {
-			$ROBJ->form_err("files_ary#$_", 'このファイルは登録できません: %s', $_->{name});
+			$ROBJ->form_err("files_ary#$_", 'このファイルは登録できません: %s', $file->{name});
 			next;
 		}
-		if ($shalist{$sha}) {
+		if (exists($shalist{$sha})) {
 			$ROBJ->form_err("files_ary#$shalist{$sha}");
-			$ROBJ->form_err("files_ary#$_", '同じ内容のファイル（または画像）が複数指定されています: %s', $_->{name});
+			$ROBJ->form_err("files_ary#$_", '同じ内容のファイル（または画像）が複数指定されています: %s', $file->{name});
 			next;
 		}
 		$shalist{$sha}=$_;
@@ -408,7 +410,7 @@ sub check_document_data {
 		#
 		# save file
 		#
-		if ($self->save_form_file($_, $name)) {
+		if ($self->save_form_file($file, $name)) {
 			$ROBJ->form_err("files_ary#$_", 'ファイルの保存に失敗しました: %s', $name);
 			next;
 		}
