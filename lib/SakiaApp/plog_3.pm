@@ -367,8 +367,10 @@ sub check_document_data {
 	my %rename_files;
 	foreach(0..$#$ary) {
 		my $file = $ary->[$_];
-
 		if (@$imgs && ref($file) && $file->{'name'} eq '') { $file = shift(@$imgs); }
+		#
+		# 既存ファイルの処理
+		#
 		if (!ref($file)) {
 			if (!$saved{$file}) {
 				$ROBJ->form_err("files_ary#$_", '既存ファイルが消えています。編集画面をリロードしてください。');
@@ -386,7 +388,7 @@ sub check_document_data {
 			next;
 		}
 		#
-		# form files
+		# フォームから送られたファイルの処理
 		#
 		if ($file->{name} eq '') { next; }
 		if (!$file->{size}) {
@@ -422,9 +424,12 @@ sub check_document_data {
 	if (!@files) {
 		$ROBJ->form_err("files_ary", 'ファイルが指定されていません。');
 	}
+
+	foreach(@new_files) {
+		delete $saved{$_};	# 同一フォームで消したファイルと同じファイルをアップロードした場合の対策
+	}
 	my @del_files  = keys(%saved);
 	$data->{files} = join("\t", @files);
-
 
 	if ($ROBJ->form_err()) {
 		$self->delete_document_files($pkey, \@new_files);
