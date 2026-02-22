@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 use v5.14;
 use strict;
-our $VERSION  = '2.00';
+our $VERSION  = '2.01';
 our $SPEC_VER = '2.00';	# specification version for compatibility
 ################################################################################
 # Sakia system - HTTP Server
 #					Copyright (C)2019-2026 nabe@abk
 ################################################################################
-# Last Update : 2026-02-21
+# Last Update : 2026-02-23
 #
 BEGIN {
 	my $path = $0;
@@ -42,6 +42,7 @@ my $IsWindows    = ($^O eq 'MSWin32');
 my $SILENT_CGI   = 0;
 my $SILENT_FILE  = 0;
 my $SILENT_OTHER = 0;
+my $WARN_MSG     = 0;
 my $OPEN_BROWSER = $IsWindows;
 my $GENERATE_CONF= 1;
 
@@ -51,13 +52,16 @@ my $PORT      = $IsWindows ? 80 : 8888;
 my $ITHREADS  =  1;
 my $TIMEOUT   =  5;
 my $TIMEOUT_BIN;
-my $DEAMONS   = 10;
+my $DAEMONS   = 10;
 my $KEEPALIVE = 1;
 my $BUFSIZE_u = '1M';	# 1MB
 my $BUFSIZE;		# byte / set from $BUFSIZE_u
+my %MIME_TYPE;
 my $MIME_FILE;
 my @MIME_LIST = qw(/etc/mime.types mime.types lib/mime.types);
 my $INDEX     = 'index.html';
+my %DENY_DIR;
+my %STATIC_DIR;
 my $PID;
 my $R_BITS;	# select socket bits
 
@@ -75,30 +79,27 @@ if ($IsWindows) {
 }
 
 #-------------------------------------------------------------------------------
-# Web Server data
+# Default MIME data
 #-------------------------------------------------------------------------------
-my %DENY_DIRS;
-my %MIME_TYPE = ( 
-	html => 'text/html',
-	htm  => 'text/html',
-	text => 'text/plain',
-	txt  => 'text/plain',
-	md   => 'text/markdown',
-	css  => 'text/css',
-	js   => 'application/javascript',
-	json => 'application/json',
-	xml  => 'application/xml',
-	gif  => 'image/gif',
-	png  => 'image/png',
-	jpg  => 'image/jpeg',
-	jpeg => 'image/jpeg',
-	webp => 'image/webp',
-	ico  => 'image/vnd.microsoft.icon',
-	m4a  => 'audio/mp4',
-	mp4  => 'video/mp4',
-	webm => 'video/webm',
-	pdf  => 'application/pdf'
-);
+my $MIME_DATA = <<MIME;
+text/plain		text txt
+text/html		html htm
+text/markdown		md
+text/css		css
+application/javascript	js mjs es
+application/json	json
+application/xml		xml
+image/gif		gif
+image/png		png
+image/jpg		jpg jpeg
+image/webp		webp
+image/vnd.microsoft.icon ico
+audio/mp4		m4a
+video/mp4		mp4 mpg4 m4v
+video/mpeg		mpeg mpg mpe m1v m2v
+video/webm		webm
+application/pdf		pdf
+MIME
 
 #-------------------------------------------------------------------------------
 # for RFC date
@@ -148,6 +149,7 @@ my %SIZE_UNIT = ('K' => 1024, 'M' => 1024*1024, 'G' => 1024*1024*1024);
 			if ($k2 eq 'sc') { $key=$ky; $SILENT_CGI  = $SILENT_OTHER = 1; next; }
 			if ($k2 eq 'sf') { $key=$ky; $SILENT_FILE = $SILENT_OTHER = 1; next; }
 			if ($k  eq 's')  { $key=$kx; $SILENT_CGI  = $SILENT_FILE = $SILENT_OTHER = 1; next; }
+			if ($k  eq 'w')  { $key=$kx; $WARN_MSG    = 1; next; }
 
 			# system code
 			if ($k2 eq 'cs') { $key=$ky; $SYS_CODE = shift(@ary); next; }
@@ -196,7 +198,7 @@ my %SIZE_UNIT = ('K' => 1024, 'M' => 1024*1024, 'G' => 1024*1024*1024);
 				exit(-1);
 			}
 			if ($k eq 'p') { $PORT    = $val; next; }
-			if ($k eq 'd') { $DEAMONS = $val; next; }
+			if ($k eq 'd') { $DAEMONS = $val; next; }
 			if ($k eq 'm') { $MAX_CGI_REQUESTS = $val; next; }
 
 			#---------------------------------------------
@@ -207,7 +209,7 @@ my %SIZE_UNIT = ('K' => 1024, 'M' => 1024*1024, 'G' => 1024*1024*1024);
 		}
 	}
 	if ($TIMEOUT < 0.001)	{ $TIMEOUT=0.001; }
-	if ($DEAMONS < 1) 	{ $DEAMONS=1;     }
+	if ($DAEMONS < 1) 	{ $DAEMONS=1;     }
 	if ($MAX_CGI_REQUESTS == 0)		{ $MAX_CGI_REQUESTS=10000000; }
 	if ($MAX_CGI_REQUESTS > 10000000)	{ $MAX_CGI_REQUESTS=10000000; }
 	if ($MAX_CGI_REQUESTS <      100)	{ $MAX_CGI_REQUESTS=100; }
@@ -241,6 +243,7 @@ Available options are:
   -s		silent mode
   -sc		silent mode for cgi  access
   -sf		silent mode for file access
+  -w		enable warn message
   -n		do not open web browser (Windows only)
   -?|-h		view this help
 HELP
@@ -338,7 +341,7 @@ print(
 		. " Timeout $TIMEOUT sec,"
 		. " Buffer ${BUFSIZE_u}B,"
 		. " Keep-Alive " . ($KEEPALIVE ? 'on' : 'off') . "\n"
-	. "    Start up: $DEAMONS " . ($ITHREADS ? 'threads' : 'process')
+	. "    Start up: $DAEMONS " . ($ITHREADS ? 'threads' : 'process')
 	. ", Max cgi requests: $MAX_CGI_REQUESTS\n"
 );
 
@@ -352,43 +355,62 @@ if (1) {
 }
 
 #-------------------------------------------------------------------------------
-# load mime types
+# load MIME types
 #-------------------------------------------------------------------------------
-if (!$MIME_FILE) {
-	($MIME_FILE) = grep { -r $_ } @MIME_LIST;
-}
-if ($MIME_FILE) {
-	print "    Load mime types: $MIME_FILE ";
-	my $r = sysopen(my $fh, $MIME_FILE, O_RDONLY);
-	if (!$r) {
-		print "(error!)\n";
-	} else {
-
-		my $c=0;
-		while(<$fh>) {
-			chomp($_);
-			$_ =~ s/#.*//;
-			my ($type, @ary) = split(/\s+/, $_);
-			if ($type eq '' || !@ary) { next; }
-			foreach(@ary) {
-				$MIME_TYPE{$_} = $type;
-				$c++;
-			}
-		}
-		print "(load $c extensions)\n";
+if (1) {
+	if (!$MIME_FILE) {
+		($MIME_FILE) = grep { -r $_ } @MIME_LIST;
 	}
-	close($fh);
+	my $lines;
+	if ($MIME_FILE) {
+		print "    Load mime types: $MIME_FILE ";
+		$lines = &fread_lines($MIME_FILE);
+		if (!$lines) {
+			print "(read error!)\n";
+			undef $MIME_FILE;
+		}
+	}
+	$lines ||= [ split(/\n/, $MIME_DATA) ];
+
+	my $c=0;
+	foreach(@$lines) {
+		chomp($_);
+		$_ =~ s/#.*//;
+		my ($type, @ary) = split(/\s+/, $_);
+		if ($type eq '' || !@ary) { next; }
+		foreach(@ary) {
+			$MIME_TYPE{$_} = $type;
+			$c++;
+		}
+	}
+	$MIME_FILE && print "(load $c extensions)\n";
 }
 
 #-------------------------------------------------------------------------------
 # search deny directories
 #-------------------------------------------------------------------------------
 {
-	my @dirs = &search_dir_file('.htaccess');
-
-	print "    Deny dirs: " . join('/, ', @dirs) . "/ and .*/\n";
+	my @dirs = &search_file_in_dir('./', '.htaccess');
+	my @deny;
+	my @static;
 	foreach(@dirs) {
-		$DENY_DIRS{$_}=1;
+		my $data = join('', @{ &fread_lines($_ . '.htaccess') });
+		if ($data =~ /(?:^|\n)\s*Require\s+All\s+Denied\b/i
+		 || $data =~ /(?:^|\n)\s*deny\s+from\s+all\b/i) {
+			push(@deny, $_);
+		}
+		if ($data =~ /(?:^|\n)\s*RewriteEngine\s+Off\b/i) {
+			push(@static, $_);
+		}
+	}
+
+	if (@deny) {
+		print "    Deny dirs: " . join(', ', @deny) . " and .*/\n";
+		%DENY_DIR = map { $_ => 1 } @deny;
+	}
+	if (@static) {
+		print "    Static dirs: " . join(', ', @static) . "\n";
+		%STATIC_DIR = map { $_ => 1 } @static;
 	}
 }
 
@@ -467,7 +489,7 @@ if ($GENERATE_CONF) {
 	$SIG{ALRM} = 'IGNORE';	#
 
 	# prefork / create_threads
-	for(my $i=0; $i<$DEAMONS; $i++) {
+	for(my $i=0; $i<$DAEMONS; $i++) {
 		&fork_or_crate_thread(\&daemon_main, $srv);
 	}
 
@@ -491,7 +513,7 @@ if ($GENERATE_CONF) {
 	# main thread
 	while(1) {
 		sleep(3);
-		$exit_daemons = $ITHREADS ? ($DEAMONS - scalar(threads->list())) : $exit_daemons;
+		$exit_daemons = $ITHREADS ? ($DAEMONS - scalar(threads->list())) : $exit_daemons;
 		if ($exit_daemons<1) { next; }
 
 		# Restart dead daemons
@@ -511,6 +533,7 @@ sub daemon_main {
 	my $srv = shift;
 	my %bak = %ENV;
 	my $cgi = 0;
+	if (!$WARN_MSG) { close(STDERR); }
 
 	if (!$ITHREADS) {	# for fock() in CGI
 		$SIG{CHLD} = 'IGNORE';
@@ -525,10 +548,9 @@ sub daemon_main {
 		my $addr = accept(my $sock, $srv);
 		if (!$addr) { next; }
 
-		my $st = &accept_client($sock, $addr, \%bak);	# $r==-1 if cgi_reload
-
+		my $st = &accept_client($sock, $addr, \%bak);
 		if ($st->{shutdown}) {
-			print "$$ shutdown\n";
+			print "[$PID] shutdown\n";
 			last;
 		}
 		if ($MAX_CGI_REQUESTS<$CGI_REQUESTS) { last; }
@@ -772,24 +794,40 @@ sub try_file_read {
 
 	$file =~ s|/+|/|g;
 	$file =~ s|\?.*||;
-	if ($file =~ m|/\.\./|)   { return; }	# ignore parent dir
-	if ($file =~ m|^/\..*/|)  { return; }	# ignore .*/ dirs
-	if ($file =~ m|^/[^/]*$|) { return; }	# ignore current dir files
+	if ($file =~ m|/\.\./|)  { return; }	# ignore parent dir
+	if ($file =~ m|^/\..*/|) { return; }	# ignore .*/ dirs
 
 	if ($INDEX && $file ne '/' && substr($file, -1) eq '/') {
 		$file .= $INDEX;
+	}
+	my $not_favicon = $file ne '/favicon.ico';
+
+	#---------------------------------------------------
+	# deny and static check
+	#---------------------------------------------------
+	my $_file = substr($file,1);		# /index.html to index.html
+	my $static;
+	if ($not_favicon) {
+		my @ary = split(/\//, $_file);
+		pop(@ary);
+		if (!@ary) { return; }	# ignore current dir files
+
+		my $dir='';
+		while(@ary) {
+			$dir .= shift(@ary) . '/';
+			if ($DENY_DIR  {$dir}) { return &_403_forbidden($state); }
+			if ($STATIC_DIR{$dir}) { $static=1; }
+		}
 	}
 
 	#---------------------------------------------------
 	# file system encode
 	#---------------------------------------------------
-	my $_file = substr($file,1);	# /index.html to index.html
-
 	if ($FS_CODE && $FS_CODE ne $SYS_CODE) {
 		Encode::from_to($_file, $SYS_CODE, $FS_CODE);
 	}
 	if (!-e $_file) {
-		if ($file ne '/favicon.ico') { return; }
+		if (!$static && $not_favicon) { return; }
 		$state->{type} = 'file';
 		return &_404_not_found($state);
 	}
@@ -798,9 +836,7 @@ sub try_file_read {
 	# file request
 	#---------------------------------------------------
 	$state->{type} = 'file';
-	if (!-r $_file
-	 || $file =~ m|/\.ht|
-	 || $file =~ m|^/([^/]+)/| && $DENY_DIRS{$1}) {
+	if (!-r $_file || $file =~ m|/\.ht|) {
 		return &_403_forbidden($state);
 	}
 
@@ -1026,18 +1062,37 @@ sub rfc_date {
 }
 
 #-------------------------------------------------------------------------------
-# deny directories
+# read file
 #-------------------------------------------------------------------------------
-sub search_dir_file {
-	my $file = shift || '.htaccess';
-	opendir(my $fh, './') || return;
+sub fread_lines {
+	my $file = shift;
+	sysopen(my $fh, $file, O_RDONLY) or return undef;
+	my @lines = <$fh>;
+	close($fh);
+	return \@lines;
+}
+
+#-------------------------------------------------------------------------------
+# search file in dir
+#-------------------------------------------------------------------------------
+sub search_file_in_dir {
+	my $dir  = shift || './';
+	my $file = shift;
+	my $cnt  = shift || 0;
+	opendir(my $fh, $dir) || return;
+	$dir =~ s|/*$|/|;
+	$dir = ($dir eq './') ? '' : $dir;
 
 	my @ary;
 	foreach(readdir($fh)) {
 		if ($_ eq '.' || $_ eq '..' )  { next; }
-		if (!-d $_) { next; }
-		if (-e "$_/$file") {
-			push(@ary, $_);
+		my $d = "$dir$_";
+		if (!-d $d) { next; }
+		if (-e "$d/$file") {
+			push(@ary, "$dir$_/");
+		}
+		if ($cnt<99) {
+			push(@ary, &search_file_in_dir($d, $file, $cnt+1));
 		}
 	}
 	closedir($fh);
