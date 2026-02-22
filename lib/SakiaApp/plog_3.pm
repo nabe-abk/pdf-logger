@@ -632,19 +632,27 @@ sub _ajax_check_document_hash {
 		return [ 10, 'ハッシュのフォーマットがBase64 URLではありません。' ];
 	}
 
-	my $file = $self->get_hash_data_file($hash);
-	if (!-r $file) {
+	my $ary = $self->check_document_hash($pkey, $hash);
+	if (!@$ary) {
 		return 0;	# sucess
 	}
+
+	return { ret=>0, list=>$ary };
+}
+
+sub check_document_hash {
+	my $self = shift;
+	my $pkey = shift;
+	my $hash = shift;
+	my $ROBJ = $self->{ROBJ};
+
+	my $file = $self->get_hash_data_file($hash =~ s/[^\w\-]//gr);
+	if (!-r $file) { return []; }
 
 	my $lines = $ROBJ->fread_lines($file);
-	my @ary   = grep { $_ && $_ != $pkey } map { int($_) } @$lines;
-	if (!@ary) {
-		return 0;	# sucess
-	}
-
-	return { ret=>0, list=>\@ary };
+	return [ grep { $_ && $_ != $pkey } map { int($_) } @$lines ];
 }
+
 #-------------------------------------------------------------------------------
 # ●書類の改ざんチェック
 #-------------------------------------------------------------------------------

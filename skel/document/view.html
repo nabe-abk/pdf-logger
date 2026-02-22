@@ -82,10 +82,11 @@
 		<th colspan="2" class="mw300">書類 <button type="button" id="check-files">改変チェック</button></th>
 	</tr>
 	<$local(files) = v.load_document_files(h)>
-	<@foreach(local(t), files)>
+	<@foreach(local(n), from_to(0,##files))><$local(t) = files#n>
 	<tr>
 		<td colspan="2" class="file">
 			<input type="hidden" class="filename" name="files_ary" value="<@t>">
+			<span class="doc-filename">[<@n+1>]</span>
 			<a class="filepath" href="<@Basepath><@v.pub_dir><@t>"><@v.get_file_ext(t)>ファイル</a>
 			<span class="tamper-check"></span>
 		</td>

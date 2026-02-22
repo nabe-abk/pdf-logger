@@ -1,7 +1,7 @@
 
 <$local(h)    = argv#0 || {}>
-<$local(edit) = h.pkey>
-<$local(cl)   = if(edit, v.load_client(h.c_pkey), {})>
+<$local(pkey) = h.pkey>
+<$local(cl)   = if(pkey, v.load_client(h.c_pkey), {})>
 
 <$v.regist_js_module("<@v.script_dir>lib/pdf.mjs")>
 <$v.regist_js_module("<@v.script_dir>lib/sha256.min.js")>
@@ -221,13 +221,14 @@
 		</td>
 	</tr>
 	<$local(files) = v.load_document_files(h)>
-	<@foreach(local(t), files)>
+	<@foreach(local(n), from_to(0,##files))><$local(t) = files#n><$local(hash) = v.get_sha256_from_filename(t)>
 	<tr>
-		<td colspan="2" class="file">
+		<td colspan="2" class="file" data-duplicate-list="<@join(',', v.check_document_hash(pkey, hash))>">
 			<input type="hidden" name="files_ary" value="<@t>">
+			<span class="doc-filename" title="<@hash>">[<@n+1>]</span>
 			<a class="filepath" href="<@Basepath><@v.pub_dir><@t>"><@v.get_file_ext(t)>ファイル</a>
 			<button type="button" class="doc-file reset-file" data-target="#doc_file">クリア</button>
-			<div class="file-duplicate"><span class="msg">他データと重複してます</span><span class="file-duplicate-list"></span></div>
+			<div class="file-duplicate"><span class="msg">他データと重複してます</span><span class="list"></span></div>
 		</td>
 	</tr>
 	<$end>
@@ -248,7 +249,7 @@
 				<option value="900,1600">9:16</option>
 			</select>
 			</span>
-			<div class="file-duplicate"><span class="msg">他データと重複してます</span><span class="file-duplicate-list"></span></div>
+			<div class="file-duplicate"><span class="msg">他データと重複してます</span><span class="list"></span></div>
 		</td>
 	</tr>
 	<tr id="camera-view-box" class="hide"><td colspan="2">

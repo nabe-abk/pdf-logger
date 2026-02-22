@@ -128,11 +128,18 @@ if (1) {
 	const $file = $files.find('td.file');
 	if ($file.length) $($file[0]).click();
 }
-
-// 表示中のファイルをリセットしたら表示クリア
+//
+// 表示中のファイルをリセットしたら要素ごと削除
+//
 $files.on('click', 'tr:not(.last-upload) button.reset-file', function(){
 	const $td = $(this).closest('td');
 	if ($td.is($current_view_td)) $view_file.empty();
+
+	// 重複確認をやり直す
+	const $list = $files.find('td.internal-duplicate');
+	for(const td of $list) {
+		check_duplicate($(td));
+	}
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -443,60 +450,109 @@ $files.on('update-file-event', 'img', async function(evt) {
 	}
 });
 
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 //●選択されたファイルのハッシュ値を計算し、重複を確認する。
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
 $files.on('update-file-event', 'img', async function(evt) {
 	const file = $(this).data('file');
 	if (!file) return;
 
 	const data = await asys.asyncFileReader('readAsArrayBuffer', file);
 
-	let _b64;
-	if (crypto.subtle) {
+	let _hash;
+	if (crypto.subtle) {	// crypto.subtle is https only
 		const sha = await crypto.subtle.digest('SHA-256', data);
-		_b64 = btoa( String.fromCharCode.apply(null, new Uint8Array(sha)) );
+		_hash = btoa( String.fromCharCode.apply(null, new Uint8Array(sha)) );
 	} else {
 		const hash = sha256.create();
 		hash.update( data );
-		_b64 = btoa( String.fromCharCode.apply(null, hash.array()) );
+		_hash = btoa( String.fromCharCode.apply(null, hash.array()) );
 	}
-	const b64 = b64urlsafe(_b64);
+	const hash = b64urlsafe(_hash);
+	check_duplicate($(this).closest('td'), hash);
+});
 
-	const $td = $(evt.target).closest('td');
-	$td.find('.doc-filename').attr('title', b64);
+function b64urlsafe(inp) {
+	return inp.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
 
-	const ret = await asys.send_ajax({
-		data: {
-			action:	'_ajax_check_document_hash',
-			hash:	b64,
-			pkey:	$files.data('pkey')
+async function check_duplicate($this_td, hash) {
+	//------------------------------------------------------------
+	// 同一フォーム内で重複を確認する
+	//------------------------------------------------------------
+	$this_td.removeClass('internal-duplicate');
+	$this_td.find('div.file-duplicate').hide();
+
+	const $this_fn = $this_td.find('.doc-filename');
+	if (hash == null || hash === '') hash = $this_fn.attr('title');
+	if (hash == null || hash === '') return;	// safety
+	$this_fn.attr('title', hash);
+
+	const list=[];
+	for(const td of $files.find('td.file')) {
+		const $td = $(td);
+		if ($td.is($this_td)) continue;
+
+		const $fn = $td.find('.doc-filename');
+		if ($fn.attr('title') === hash) {
+			list.push( $fn.text() );	// push filename
 		}
-	});
-	if (ret.ret != 0) return;	// error
-
-	const $div = $td.find('.file-duplicate');
-	const list = ret.list;
-	if (!list) {			// not found same hash
-		$div.hide();
+	}
+	if (list.length) {
+		$this_td.addClass('internal-duplicate');
+		show_duplicate_error($this_td, [...new Set(list)], '同じ内容のファイルがあります');
 		return;
 	}
 
 	//------------------------------------------------------------
-	// ファイル重複警告を表示する
+	// 他の書類との重複を確認する
 	//------------------------------------------------------------
-	const $span = $div.find('.file-duplicate-list').empty();
-	const url   = $files.data('viewbase');
-	for(const key of list) {
-		const $a = $('<a>').attr('href', url + key).text(key);
-		$span.append($a);
-	}
-	$div.show();
-});
+	const ret = await asys.send_ajax({
+		data: {
+			action:	'_ajax_check_document_hash',
+			hash:	hash,
+			pkey:	$files.data('pkey')
+		}
+	});
+	if (ret.ret != 0) return;	// error
+	if (!ret.list) return;		// not found same hash
 
-function b64urlsafe(inp) {
-		return inp.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+	show_duplicate_error($this_td, ret.list);
 }
+
+//------------------------------------------------------------
+// ファイル重複警告を表示する
+//------------------------------------------------------------
+function show_duplicate_error($td, list, msg) {
+	const $div_dup  = $td.find('div.file-duplicate').hide();
+	const $dup_msg  = $td.find('.msg' ).empty();
+	const $dup_list = $td.find('.list').empty();
+	if (! list.length) return;
+
+	$dup_msg.text(msg || '他データと重複してます');
+
+	const url = $files.data('viewbase');
+	for(const key of list) {
+		const $a = $('<a>').text(key);
+		if (key.toString().match(/^\d+$/)) {
+			$a.attr('href', url + key).attr('target', '_blank')
+		}
+		$dup_list.append($a);
+	}
+	$div_dup.show();
+}
+
+//------------------------------------------------------------
+// 初期ファイルに警告があれば表示する
+//------------------------------------------------------------
+for(const td of $files.find('td.file')) {	// init
+	const $td  = $(td);
+	const list = ($td.data('duplicate-list') || '').toString().replace(/\s/g, '');
+	if (list.length) {
+		show_duplicate_error($td, list.split(',') );
+	}
+}
+
 
 //##############################################################################
 //●フォームデータ生成
