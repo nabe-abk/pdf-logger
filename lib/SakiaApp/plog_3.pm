@@ -815,8 +815,9 @@ sub delete_document_files {
 # ●shaの取得
 #---------------------------------------------------------------------
 sub get_sha256_b64url {
-	my $self  = shift;
-	my $file  = shift;
+	my $self = shift;
+	my $file = shift;
+	my $ROBJ = $self->{ROBJ};
 
 	if (ref($file)) {	# form file
 		if ($file->{tmp}) {
@@ -827,7 +828,10 @@ sub get_sha256_b64url {
 	}
 
 	my $sha = Digest::SHA->new("sha256");
-	$sha->addfile($file);
+	sysopen(my $fh, $ROBJ->fs_encode($file), Fcntl::O_RDONLY) or return;
+	binmode($fh);		# for Windows
+	$sha->addfile($fh);
+	close($fh);
 	return $sha->b64digest =~ tr|+/|-_|r;;
 }
 
