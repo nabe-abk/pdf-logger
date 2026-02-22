@@ -160,7 +160,7 @@ $('#check-files').on('click', async function(evt){
 				return res.text();
 			},
 			type: res.headers.get("Content-Type")
-		});
+		}, res);
 	});
 
 	// 最初のファイルを自動表示

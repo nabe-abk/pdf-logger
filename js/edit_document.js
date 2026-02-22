@@ -119,7 +119,7 @@ $files.on('click', 'td.file', async function(evt){
 			return res.text();
 		},
 		type: res.headers.get("Content-Type")
-	});
+	}, res);
 	$current_view_td = $td;
 });
 

@@ -62,11 +62,15 @@ asys.asyncFileReader = function(method, file) {
 ////////////////////////////////////////////////////////////////////////////////
 //●ファイルのプレビュー
 ////////////////////////////////////////////////////////////////////////////////
-asys.view_file = async function($div, inp) {
+asys.view_file = async function($div, inp, res) {
 	const type = inp.type || '';
 
 	let $obj;
-	if (type.match(/\/pdf$/i)) {	// PDF
+	if (res && (res.status!=200 || res.headers.get("X-Application"))) {
+		$obj = $('<div>').addClass('view-error');
+		$obj.text('ファイルが見つかりません。');
+
+	} else if (type.match(/\/pdf$/i)) {	// PDF
 		$obj = $('<object>').attr('data', await inp.readAsDataURL());
 
 	} else if (type.match(/^image\//i)) {

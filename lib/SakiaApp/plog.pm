@@ -138,6 +138,10 @@ sub output_html {
 	if ($frame) {
 		$out = $ROBJ->call($frame, $out);
 	}
+
+	# used by asys.view_file() in js/plogger.js
+	$ROBJ->set_header('X-Application', 'pdf-logger');
+
 	$ROBJ->output($out);
 }
 
