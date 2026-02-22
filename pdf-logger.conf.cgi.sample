@@ -71,7 +71,7 @@
 <$v=Main=loadapp('plog', DB)>
 
 <$v.systitle = '帳票PDFロガー'>
-<$v.start_year = 2025>
+<$v.start_year = 2026>
 
 <$v.data_dir   = data_dir>
 <$v.pub_dir    = pub_dir>
@@ -85,7 +85,7 @@
 <$v.default_tax_rate = '10'>
 
 アップロード可能なファイルの拡張子
-<$v.allow_file_ext = flagq(jpg, jpeg, png, pdf, txt)>
+<$v.allow_file_ext = flagq(jpg, jpeg, png, pdf, txt, eml)>
 
 <$v.dtypes = begin_hash_order>
 	購入
