@@ -907,12 +907,11 @@ sub remove_from_hash_data_file {
 	#
 	# 同じファイルを参照するデータが存在しない
 	#
-	$ROBJ->fs_encode(\$file);
+	$ROBJ->fedit_writelines($fh,'');	# Windowsでは先にcloseしないと削除失敗する
 	unlink($file);
-	$ROBJ->fedit_exit($fh);
 
 	my $dir = $file =~ s|/[^/]*$||r;
-	rmdir($dir);	# もし空なら削除される。
+	rmdir($dir);				# もし空なら削除される。
 }
 
 1;
