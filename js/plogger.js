@@ -80,7 +80,7 @@ asys.view_file = async function($div, inp, res) {
 		$obj = $('<textarea>').val( await inp.readAsText() );
 		$obj.prop('readonly', true);
 
-	} else if (type == 'message/rfc822') {
+	} else if (type === 'message/rfc822') {
 		$obj = await this.view_email_file( inp );
 
 	} else {
@@ -94,6 +94,7 @@ asys.view_file = async function($div, inp, res) {
 //●.emlファイルのプレビュー
 ////////////////////////////////////////////////////////////////////////////////
 import PostalMime from './lib/postal-mime/postal-mime.js';
+window.PostalMime = PostalMime;
 
 const email_view_format = `<table class="view-email"><tbody>
 <tr>

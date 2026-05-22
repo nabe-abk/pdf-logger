@@ -250,6 +250,12 @@ $files.on('update-file-event', 'img', async function(evt) {
 	 		}
 	 		text += "\n";
 		}
+
+	} else if (file.type === 'message/rfc822') {
+		const email = await PostalMime.parse(await asys.asyncFileReader('readAsText', file));
+		text = email.text;
+		console.log(text);
+
 	} else {
 			return;		// not support
 	}
