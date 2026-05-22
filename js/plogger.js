@@ -80,12 +80,82 @@ asys.view_file = async function($div, inp, res) {
 		$obj = $('<textarea>').val( await inp.readAsText() );
 		$obj.prop('readonly', true);
 
+	} else if (type == 'message/rfc822') {
+		$obj = await this.view_email_file( inp );
+
 	} else {
 		$obj = $('<div>').addClass('view-error');
-		$obj.text('プレビュー未対応のファイルです');
+		$obj.text('プレビュー未対応のファイルです: ' + type);
 	}
 	$div.empty().append( $obj );
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//●.emlファイルのプレビュー
+////////////////////////////////////////////////////////////////////////////////
+import PostalMime from './lib/postal-mime/postal-mime.js';
+
+const email_view_format = `<table class="view-email"><tbody>
+<tr>
+	<th>件名:</td>
+	<td class="email-subject"></td>
+</tr>
+<tr>
+	<th>From:</td>
+	<td class="email-from"></td>
+</tr>
+<tr>
+	<th>To:</td>
+	<td class="email-to"><@subject></td>
+</tr>
+<tr>
+	<th>Date:</td>
+	<td class="email-date"><@date></td>
+</tr>
+<tr>
+	<td colspan="2" class="email-text"></td>
+</tr>
+</tbody></table>`;
+
+const date_options = {
+	year: 'numeric',
+	month: 'numeric',
+	day: 'numeric',
+	hour: 'numeric',
+	minute: 'numeric',
+	second: 'numeric',
+	hour12: false
+}
+
+asys.view_email_file = async function(inp) {
+	const email = await PostalMime.parse(await inp.readAsText());
+
+	const format_a = (adr) => {
+		if (!adr) return '';
+		const ary = Array.isArray(adr) ? adr : [ adr ];
+		const list=[];
+		for(const x of ary) {
+			if (x.name)  list.push(x.name + ' ' + '<' + x.address + '>');
+				else list.push(x.address);
+		}
+		return list.join(', ');
+	};
+
+	const h = {
+		subject:email.subject,
+		from:	format_a(email.from),
+		to:	format_a(email.to),
+		date:	new Intl.DateTimeFormat('default', date_options).format(new Date(email.date)),
+		text:	email.text.replace(/^\s*/, '').replace(/\s*$/, '')
+	};
+
+	let $view = $('<div>').html(email_view_format).children('table');
+	for(const key in h) {
+		$view.find('.email-' + key).text( h[key] );
+	}
+	return $view;
+}
+
 
 //##############################################################################
 // asys.js の拡張

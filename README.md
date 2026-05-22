@@ -11,6 +11,7 @@ macOSでもローカル動作可能。
 
   * [jQuery](https://jquery.com/) (MIT)
   * [js-sha256](https://github.com/emn178/js-sha256) (MIT)
+  * [postal-mime](https://postal-mime.postalsys.com/) (MIT)
   * [PDF.js](https://github.com/mozilla/pdf.js) (Apache 2.0)
   * [Sakia Framework](https://github.com/nabe-abk/Sakia) (MIT) - Web application framework
   * [asys.js](https://github.com/nabe-abk/asys.js) (MIT) - Web application js library

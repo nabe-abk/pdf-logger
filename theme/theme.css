@@ -257,6 +257,13 @@ article div.body {
 	object-fit:	contain;
 }
 
+#view-file .view-email .email-text {
+	font-family:	monospace;
+	white-space:	pre-wrap;
+	padding:	4px;
+}
+
+
 #tbody-documents span.doc-filename {
 	font-size:	var(--small-font-size);
 }
