@@ -16,7 +16,7 @@
 	asys.set_cookie('document_backurl', '<@url>');
 </script>
 
-<$Query.dtype  ||= ow.dtype>
+<$Query.dtype      = ow.dtype>
 <$Query.monetary   = 1>
 <$Query.pay_on_day = 0>
 
@@ -74,9 +74,7 @@
 		<div class="iblocks">
 		<span class="iblock"><$x = Query.dtype>
 		<select name="dtype" class="js-on-change-submit">
-		<@foreach_keys(local(t), v.dtypes)>
-			<option class="dtype-<@t>" value="<@t>"<@if(t eq x, ' selected')>><@t></option>
-		<$end>
+			<option class="dtype-<@x>" value="<@x>" selected><@x></option>
 		</select></span>
 
 		<span class="iblock"><$x = Query.dformat>
